@@ -65,13 +65,14 @@ colideRaq move = move { velBola = (vx1, vy) }
        (x, y) = localBola move
        posEsq = raqueteEsq move
        posDir = raqueteDir move
-       vx1 = if colideEsq || colideDir then eixoY else vx
+       vx1 = if colideEsq then eixoYE posEsq else (if colideDir then eixoYD posDir else vx)
        colideEsq = x - diametroBola/2 <= -larguraF/2 + larguraRaq/2
        colideDir = x + diametroBola/2 >= larguraF/2 - larguraRaq/2
-       eixoY = if colideEY posEsq y || colideEY posDir y  then (-vx) else vx
+       eixoYE pos = if colideEY pos y then (-vx)+ 20 else vx
+       eixoYD pos = if colideEY pos y then (-vx)- 20 else vx
 
 colideEY :: Float -> Float -> Bool
-colideEY p a = if a > p - alturaRaq/2 && a < p + alturaRaq/2 then True else False
+colideEY p b = if b > p - alturaRaq/2 && b < p + alturaRaq/2 then True else False
 
 main :: IO ()
 main = play window background fps estadoInicial desenho controle update
@@ -87,10 +88,14 @@ raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSoli
 controle :: Event -> Movimento -> Movimento
 controle (EventKey (Char 'r') _ _ _) move = move { localBola = (0, 0), velBola = (0, 0) }
 controle (EventKey (Char 'f') _ _ _) move = move { localBola = (0, 0), velBola = (-50, 40) }
-controle (EventKey (Char 'o') Up _ _) move = if (raqueteDir move) + alturaRaq/2 <= alturaF/2 then move { raqueteDir = 15 + (raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
-controle (EventKey (Char 'w') Up _ _) move = move { raqueteEsq = 15 +(raqueteEsq move) }
-controle (EventKey (Char 's') Down _ _) move = move { raqueteEsq = -15 +(raqueteEsq move) }
-controle (EventKey (Char 'l') Down _ _) move = move { raqueteDir = -15 +(raqueteDir move) }
+controle (EventKey (Char 'o') Up _ _) move = if (raqueteDir move) + alturaRaq/2 <= alturaF/2
+         then move { raqueteDir = 15 + (raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
+controle (EventKey (Char 'w') Up _ _) move = if (raqueteEsq move) + alturaRaq/2 <= alturaF/2
+         then move { raqueteEsq = 15 +(raqueteEsq move) } else move { raqueteEsq = (raqueteEsq move) }
+controle (EventKey (Char 's') Down _ _) move = if (raqueteEsq move) - alturaRaq/2 >= - alturaF/2
+         then move { raqueteEsq = -15 +(raqueteEsq move) } else move { raqueteEsq = (raqueteEsq move) }
+controle (EventKey (Char 'l') Down _ _) move = if (raqueteDir move) - alturaRaq/2 >= - alturaF/2
+         then move { raqueteDir = -15 +(raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
 controle _ move = move
 
 
