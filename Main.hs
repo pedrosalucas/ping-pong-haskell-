@@ -43,7 +43,7 @@ data Movimento = Move { localBola :: (Float, Float), velBola :: (Float, Float),
 estadoInicial :: Movimento
 estadoInicial = Move { localBola = (-larguraF/2 + diametroBola/2 + larguraRaq, (-30)),
                        velBola = (55, 45) , raqueteDir = 0 , raqueteEsq = 0 }
-
+-----------------------------------------------------------------------------------------------------------------------
 moveBola :: Float -> Movimento -> Movimento
 moveBola t move = move { localBola = (x1, y1) }
  where (x, y) = localBola move
@@ -74,11 +74,11 @@ colideRaq move = move { velBola = (vx1, vy) }
 colideEY :: Float -> Float -> Bool
 colideEY p b = if b > p - alturaRaq/2 && b < p + alturaRaq/2 then True else False
 
-main :: IO ()
-main = play window background fps estadoInicial desenho controle update
-
 update :: Float -> Movimento -> Movimento
 update t =  colideBorda . moveBola t . colideRaq
+--------------------------------------------------------------------------------------------------------------------
+main :: IO ()
+main = play window background fps estadoInicial desenho controle update
 
 raquete:: Color -> Float -> Float -> Picture
 raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSolid (larguraRaq) (alturaRaq),
@@ -87,7 +87,7 @@ raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSoli
 
 controle :: Event -> Movimento -> Movimento
 controle (EventKey (Char 'r') _ _ _) move = move { localBola = (0, 0), velBola = (0, 0) }
-controle (EventKey (Char 'f') _ _ _) move = move { localBola = (0, 0), velBola = (-50, 40) }
+controle (EventKey (Char 'f') _ _ _) move = if (localBola move) == (0, 0) then move { velBola = (-50, 40) } else move { velBola = (velBola move)}
 controle (EventKey (Char 'o') Up _ _) move = if (raqueteDir move) + alturaRaq/2 <= alturaF/2
          then move { raqueteDir = 15 + (raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
 controle (EventKey (Char 'w') Up _ _) move = if (raqueteEsq move) + alturaRaq/2 <= alturaF/2
