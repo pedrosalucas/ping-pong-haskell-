@@ -30,16 +30,16 @@ background = black
 -----------------------------------------------------------------------------------------------------------------------
 -- Área referente às Posições, Velocidade e Num do Placar
 data Movimento = Move { localBola :: (Float, Float), velBola :: (Float, Float), raqueteDir :: Float,
-                        raqueteEsq :: Float, placarDir :: Int, placarEsq :: Int, batida :: Float {-, sobeEsq :: Bool,
-                        desceEsq :: Bool-} }
+                        raqueteEsq :: Float, placarDir :: Int, placarEsq :: Int, batida :: Float, sobeEsq :: Bool,
+                        desceEsq :: Bool, sobeDir :: Bool, desceDir :: Bool }
  deriving Show
 
 estadoInicial :: Movimento
 estadoInicial = Move { localBola = (-larguraF/2 + diametroBola/2 + larguraRaq, (-30)), velBola = (55, 45) ,
-                       raqueteDir = 0 , raqueteEsq = 0 , placarDir = 0, placarEsq = 0, batida = 0 {-, sobeEsq = False,
-                       desceEsq = False-} }
+                       raqueteDir = 0 , raqueteEsq = 0 , placarDir = 0, placarEsq = 0, batida = 0, sobeEsq = False,
+                       desceEsq = False, sobeDir = False, desceDir= False }
 -----------------------------------------------------------------------------------------------------------------------
--- Área referente ao Movimento da Bola
+-- Área referente ao Movimento da Bola, Movimento da Raquete
 moveBola :: Float -> Movimento -> Movimento
 moveBola t move = move { localBola = (x1, y1) }
  where (x, y) = localBola move
@@ -78,7 +78,6 @@ confereBat move = if (b) `mod` 10 == 0 && b /= 0 then ( vel25 (-vx, vy)) else (-
        b = 1 + (fromEnum (batida move))
        vel25 (x, y) = ((x * 1.25), (y * 1.25))
 
-
 gol :: Movimento -> Movimento
 gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), placarDir = 1 + (placarDir move), batida=0 }
             else (if golNaDir
@@ -88,15 +87,29 @@ gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), plac
        golNaEsq = x + (diametroBola/2) <= (-larguraF/2)
        golNaDir = x - (diametroBola/2) >= (larguraF/2)
 
-
-
 {-colideObst :: Movimento -> Movimento
 colideObst move = if (batida move) == 40 then move { velBola = (vx1, vy1) } else move
  where (vx, vy) = velBola move-}
 
+estadoRaqEsq :: Movimento -> Movimento
+estadoRaqEsq move
+ | (sobeEsq move) == True = if confereCima then move { raqueteEsq = (raqueteEsq move) + 2 } else move
+ | (desceEsq move) == True = if confereBaixo then move { raqueteEsq = (raqueteEsq move) - 2 } else move
+ | otherwise = move
+ where confereCima = (raqueteEsq move) + (alturaRaq/2) <= (alturaF/2)
+       confereBaixo = (raqueteEsq move) - (alturaRaq/2) >= -(alturaF/2)
+
+estadoRaqDir :: Movimento -> Movimento
+estadoRaqDir move
+ | (sobeDir move) == True = if confereCima then move { raqueteDir = (raqueteDir move) + 2 } else move
+ | (desceDir move) == True = if confereBaixo then move { raqueteDir = (raqueteDir move) - 2 } else move
+ | otherwise = move
+ where confereCima = (raqueteDir move) + (alturaRaq/2) <= (alturaF/2)
+       confereBaixo = (raqueteDir move) - (alturaRaq/2) >= -(alturaF/2)
+
 
 update :: Float -> Movimento -> Movimento
-update t =  colideBorda . colideRaq . gol . moveBola t
+update t =  colideBorda . colideRaq . gol . moveBola t . estadoRaqEsq . estadoRaqDir
 --------------------------------------------------------------------------------------------------------------------
 -- Área referente aos controles do Jogo
 controle :: Event -> Movimento -> Movimento
@@ -106,16 +119,17 @@ controle (EventKey (Char 'f') _ _ _) move = if (localBola move) == (0, 0) then m
 controle (EventKey (Char 'u') _ _ _) move = move { localBola = (0, 0), velBola = (0, 0) }
 controle (EventKey (Char 'j') _ _ _) move = if (localBola move) == (0, 0) then move { velBola = (-50, 40) }
                                                                           else move { velBola = (velBola move)}
-controle (EventKey (Char 'o') Up _ _) move = if (raqueteDir move) + alturaRaq/2 <= alturaF/2
-         then move { raqueteDir = 15 + (raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
-controle (EventKey (Char 'w') Up _ _) move = if (raqueteEsq move) + alturaRaq/2 <= alturaF/2
-         then move { raqueteEsq = 15 +(raqueteEsq move) } else move { raqueteEsq = (raqueteEsq move) }
---controle (EventKey (Char 'w') Down _ _) move = if (raqueteEsq move) + alturaRaq/2 <= alturaF/2
---         then move { raqueteEsq = 15 +(raqueteEsq move) } else move { raqueteEsq = (raqueteEsq move) }
-controle (EventKey (Char 's') Down _ _) move = if (raqueteEsq move) - alturaRaq/2 >= - alturaF/2
-         then move { raqueteEsq = -15 +(raqueteEsq move) } else move { raqueteEsq = (raqueteEsq move) }
-controle (EventKey (Char 'l') Down _ _) move = if (raqueteDir move) - alturaRaq/2 >= - alturaF/2
-         then move { raqueteDir = -15 +(raqueteDir move) } else move { raqueteDir = (raqueteDir move) }
+-- Controle raquete Esquerda
+controle (EventKey (Char 'w') Down _ _) move = move { sobeEsq = True }
+controle (EventKey (Char 'w') Up _ _) move = move { sobeEsq = False }
+controle (EventKey (Char 's') Down _ _) move = move { desceEsq = True }
+controle (EventKey (Char 's') Up _ _) move = move { desceEsq = False }
+-- Controle raquete Direita
+controle (EventKey (Char 'o') Down _ _) move = move { sobeDir = True }
+controle (EventKey (Char 'o') Up _ _) move = move { sobeDir = False }
+controle (EventKey (Char 'l') Down _ _) move = move { desceDir = True }
+controle (EventKey (Char 'l') Up _ _) move = move { desceDir = False }
+
 controle _ move = move
 --------------------------------------------------------------------------------------------------------------------
 -- Área referente aos Desenhos do Jogo
