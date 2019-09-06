@@ -20,6 +20,9 @@ diametroBola = 10
 larguraRaq = 26
 alturaRaq = 86
 
+larguraObst = 1
+alturaObst = (alturaF/5)
+
 fps = 60
 
 window :: Display
@@ -85,7 +88,7 @@ gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), plac
        golNaEsq = x + (diametroBola/2) <= (-larguraF/2)
        golNaDir = x - (diametroBola/2) >= (larguraF/2)
 
-colideObst :: Movimento -> Movimento
+{-colideObst :: Movimento -> Movimento
 colideObst move = if (batida move) >= 2 then muda else move
  where (vx, vy) = velBola move
        (x, y) = localBola move
@@ -95,23 +98,7 @@ colideObst move = if (batida move) >= 2 then muda else move
         | x + raio <= -larguraObst = quadrEsq
         | x - raio <= larguraObst = quadrDir
         | otherwise = move
-       quadrEsq = if
-
-
-
-
-
-       {-vx1
-        | x1 == True = (-vx)
-        | otherwise = vx
-       x1 = if x + raio <= -(larguraF/4) - l then eixoY else x2
-       x2 = if x - raio >= -(larguraF/4)+ l then eixoY else x3
-       x3 = if x + raio >= (larguraF/4) - l then eixoY else x4
-       x4 = if x - raio <= (larguraF/4) + l then eixoY else False
-       eixoY = if y1 || y2 || y3  then True else False
-       y1 = y - raio <= (alturaF/4) + l && y + raio >= (alturaF/4) - l
-       y2 = y - raio <= l && y + raio >= (- l)
-       y3 = y - raio <= (-alturaF/4) + l && y + raio >= (-alturaF/4) - l-}
+       quadrEsq = if-}
 
 estadoRaqEsq :: Movimento -> Movimento
 estadoRaqEsq move
@@ -131,7 +118,7 @@ estadoRaqDir move
 
 
 update :: Float -> Movimento -> Movimento
-update t =  colideBorda . colideRaq . colideObst . gol . moveBola t . estadoRaqEsq . estadoRaqDir
+update t =  colideBorda . colideRaq . gol . moveBola t . estadoRaqEsq . estadoRaqDir
 --------------------------------------------------------------------------------------------------------------------
 -- Área referente aos controles do Jogo
 controle :: Event -> Movimento -> Movimento
@@ -170,9 +157,6 @@ raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSoli
 
 placar :: Int -> Float -> Float -> Picture
 placar n x y = scale 0.3 0.3 (translate (x) (y) $ color white $ text (show (n)))
-
-ladoObst = 20
-quadObst = rectangleSolid (ladoObst) (ladoObst)
 
 obstImagem :: Color -> Picture
 obstImagem cor = pictures [deCima, deBaixo]
