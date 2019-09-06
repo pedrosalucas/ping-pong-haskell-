@@ -55,8 +55,6 @@ colideBorda move = move { velBola = (vx,vy1) }
         colideBaixo = y - diametroBola <= -alturaF/2 + alturaBor
         colideCima = y + diametroBola >= alturaF/2 - alturaBor
 
-
-
 colideRaq :: Movimento -> Movimento
 colideRaq move = muda
  where (vx, vy) = velBola move
@@ -87,9 +85,23 @@ gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), plac
        golNaEsq = x + (diametroBola/2) <= (-larguraF/2)
        golNaDir = x - (diametroBola/2) >= (larguraF/2)
 
-{-colideObst :: Movimento -> Movimento
-colideObst move = if (batida move) == 40 then move { velBola = (vx1, vy1) } else move
- where (vx, vy) = velBola move-}
+colideObst :: Movimento -> Movimento
+colideObst move = if (batida move) >= 2 then move { velBola = (vx1, vy) } else move
+ where (vx, vy) = velBola move
+       (x, y) = localBola move
+       raio = (diametroBola/2)
+       l = (ladoObst/2)
+       vx1
+        | x1 == True = (-vx)
+        | otherwise = vx
+       x1 = if x + raio <= -(larguraF/4) - l then eixoY else x2
+       x2 = if x - raio >= -(larguraF/4)+ l then eixoY else x3
+       x3 = if x + raio >= (larguraF/4) - l then eixoY else x4
+       x4 = if x - raio <= (larguraF/4) + l then eixoY else False
+       eixoY = if y1 || y2 || y3  then True else False
+       y1 = y - raio <= (alturaF/4) + l && y + raio >= (alturaF/4) - l
+       y2 = y - raio <= l && y + raio >= (- l)
+       y3 = y - raio <= (-alturaF/4) + l && y + raio >= (-alturaF/4) - l
 
 estadoRaqEsq :: Movimento -> Movimento
 estadoRaqEsq move
@@ -109,7 +121,7 @@ estadoRaqDir move
 
 
 update :: Float -> Movimento -> Movimento
-update t =  colideBorda . colideRaq . gol . moveBola t . estadoRaqEsq . estadoRaqDir
+update t =  colideBorda . colideRaq . colideObst . gol . moveBola t . estadoRaqEsq . estadoRaqDir
 --------------------------------------------------------------------------------------------------------------------
 -- Área referente aos controles do Jogo
 controle :: Event -> Movimento -> Movimento
@@ -149,7 +161,8 @@ raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSoli
 placar :: Int -> Float -> Float -> Picture
 placar n x y = scale 0.3 0.3 (translate (x) (y) $ color white $ text (show (n)))
 
-quadObst = rectangleSolid 10 10
+ladoObst = 20
+quadObst = rectangleSolid (ladoObst) (ladoObst)
 
 obstImagem :: Color -> Picture
 obstImagem cor = pictures [o1 cor, o2 cor, o3 cor]
@@ -169,7 +182,7 @@ desenho move = pictures [ bola, bordas, raqEsq, raqDir, placares, meioDoCampo, o
        raqDir = raquete red (larguraF/2) $ raqueteDir move
        meioDoCampo = color (dark white) $ rectangleSolid (2.5) (alturaF)
        placares = pictures [ placar (placarDir move) (100) (-50), placar (placarEsq move) (-175) (-50) ]
-       obstaculos = if (batida move) >= 5 then obstImagem (greyN 0.5) else meioDoCampo
+       obstaculos = if (batida move) >= 2 then obstImagem (greyN 0.5) else meioDoCampo
 
 main :: IO ()
 main = play window background fps estadoInicial desenho controle update
