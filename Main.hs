@@ -88,17 +88,21 @@ gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), plac
        golNaEsq = x + (diametroBola/2) <= (-larguraF/2)
        golNaDir = x - (diametroBola/2) >= (larguraF/2)
 
-{-colideObst :: Movimento -> Movimento
+colideObst :: Movimento -> Movimento
 colideObst move = if (batida move) >= 2 then muda else move
  where (vx, vy) = velBola move
        (x, y) = localBola move
        raio = (diametroBola/2)
-       l = (ladoObst/2)
-       muda
-        | x + raio <= -larguraObst = quadrEsq
-        | x - raio <= larguraObst = quadrDir
+       muda = if x + raio == -larguraObst then quadrEsq else (if x - raio == larguraObst then quadrDir else move)
+       quadrEsq
+        | y - raio <= (alturaF/5) + alturaObst/2 && y + raio >= (alturaF/5) - alturaObst/2 = move {velBola = (-vx, vy)}
         | otherwise = move
-       quadrEsq = if-}
+       quadrDir
+        | y - raio <= (alturaF/5) + alturaObst/2 && y + raio >= (alturaF/5) - alturaObst/2 = move {velBola = (-vx, vy)}
+        | otherwise = move
+
+
+
 
 estadoRaqEsq :: Movimento -> Movimento
 estadoRaqEsq move
@@ -118,7 +122,7 @@ estadoRaqDir move
 
 
 update :: Float -> Movimento -> Movimento
-update t =  colideBorda . colideRaq . gol . moveBola t . estadoRaqEsq . estadoRaqDir
+update t =  colideBorda . colideRaq . colideObst . gol . moveBola t . estadoRaqEsq . estadoRaqDir
 --------------------------------------------------------------------------------------------------------------------
 -- Área referente aos controles do Jogo
 controle :: Event -> Movimento -> Movimento
@@ -158,10 +162,10 @@ raquete corExt x y = pictures [ translate (x) (y) $ color corExt $ rectangleSoli
 placar :: Int -> Float -> Float -> Picture
 placar n x y = scale 0.3 0.3 (translate (x) (y) $ color white $ text (show (n)))
 
-obstImagem :: Color -> Picture
-obstImagem cor = pictures [deCima, deBaixo]
- where deCima = translate 0 (alturaF/4) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
-       deBaixo = translate 0 (alturaF/4) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
+obstImagem :: Float -> Color -> Picture
+obstImagem x cor = pictures [deCima, deBaixo]
+ where deCima = translate (x) (alturaF/5) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
+       deBaixo = translate (x) (-alturaF/5) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
 
 desenho :: Movimento -> Picture
 desenho move = pictures [ bola, bordas, raqEsq, raqDir, placares, obstaculos  ]
@@ -170,7 +174,7 @@ desenho move = pictures [ bola, bordas, raqEsq, raqDir, placares, obstaculos  ]
        raqEsq = raquete green (-larguraF/2) $ raqueteEsq move
        raqDir = raquete red (larguraF/2) $ raqueteDir move
        placares = pictures [ placar (placarDir move) (100) (-50), placar (placarEsq move) (-175) (-50) ]
-       obstaculos = if (batida move) >= 2 then obstImagem (greyN 0.5) else obstImagem black
+       obstaculos = if (batida move) >= 2 && (batida move) /= 0 then obstImagem 1 (greyN 0.5) else obstImagem 0 black
 
 main :: IO ()
 main = play window background fps estadoInicial desenho controle update
