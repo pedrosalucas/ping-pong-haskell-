@@ -86,12 +86,22 @@ gol move =  if golNaEsq then move { localBola = (0, 0), velBola = (55, 45), plac
        golNaDir = x - (diametroBola/2) >= (larguraF/2)
 
 colideObst :: Movimento -> Movimento
-colideObst move = if (batida move) >= 2 then move { velBola = (vx1, vy) } else move
+colideObst move = if (batida move) >= 2 then muda else move
  where (vx, vy) = velBola move
        (x, y) = localBola move
        raio = (diametroBola/2)
        l = (ladoObst/2)
-       vx1
+       muda
+        | x + raio <= -larguraObst = quadrEsq
+        | x - raio <= larguraObst = quadrDir
+        | otherwise = move
+       quadrEsq = if
+
+
+
+
+
+       {-vx1
         | x1 == True = (-vx)
         | otherwise = vx
        x1 = if x + raio <= -(larguraF/4) - l then eixoY else x2
@@ -101,7 +111,7 @@ colideObst move = if (batida move) >= 2 then move { velBola = (vx1, vy) } else m
        eixoY = if y1 || y2 || y3  then True else False
        y1 = y - raio <= (alturaF/4) + l && y + raio >= (alturaF/4) - l
        y2 = y - raio <= l && y + raio >= (- l)
-       y3 = y - raio <= (-alturaF/4) + l && y + raio >= (-alturaF/4) - l
+       y3 = y - raio <= (-alturaF/4) + l && y + raio >= (-alturaF/4) - l-}
 
 estadoRaqEsq :: Movimento -> Movimento
 estadoRaqEsq move
@@ -165,24 +175,18 @@ ladoObst = 20
 quadObst = rectangleSolid (ladoObst) (ladoObst)
 
 obstImagem :: Color -> Picture
-obstImagem cor = pictures [o1 cor, o2 cor, o3 cor]
- where xE = -(larguraF/4)
-       xD = (larguraF/4)
-       o1 c = pictures [translate (xE) (alturaF/4) $ color c $ quadObst ,
-                        translate (xD) (alturaF/4) $ color c $ quadObst ]
-       o2 c = pictures [translate (xE) 0 $ color c $ quadObst ,translate (xD) 0 $ color c $ quadObst ]
-       o3 c = pictures [translate (xE) (-alturaF/4) $ color c $ quadObst ,
-                        translate (xD) (-alturaF/4) $ color c $ quadObst ]
+obstImagem cor = pictures [deCima, deBaixo]
+ where deCima = translate 0 (alturaF/4) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
+       deBaixo = translate 0 (alturaF/4) $ color cor $ rectangleSolid (larguraObst) (alturaObst)
 
 desenho :: Movimento -> Picture
-desenho move = pictures [ bola, bordas, raqEsq, raqDir, placares, meioDoCampo, obstaculos  ]
+desenho move = pictures [ bola, bordas, raqEsq, raqDir, placares, obstaculos  ]
  where bordas = pictures [borda (alturaF/2), borda (-alturaF/2)]
        bola = uncurry translate (localBola move) $ bolaImagem
        raqEsq = raquete green (-larguraF/2) $ raqueteEsq move
        raqDir = raquete red (larguraF/2) $ raqueteDir move
-       meioDoCampo = color (dark white) $ rectangleSolid (2.5) (alturaF)
        placares = pictures [ placar (placarDir move) (100) (-50), placar (placarEsq move) (-175) (-50) ]
-       obstaculos = if (batida move) >= 2 then obstImagem (greyN 0.5) else meioDoCampo
+       obstaculos = if (batida move) >= 2 then obstImagem (greyN 0.5) else obstImagem black
 
 main :: IO ()
 main = play window background fps estadoInicial desenho controle update
