@@ -1,2 +1,2 @@
 # ping-pong-haskell-
-Jogo em Haskell, usando Gloss
+Jogo desenvolvido em Haskell, para a disiplina de Programação Funcional da UFS.
